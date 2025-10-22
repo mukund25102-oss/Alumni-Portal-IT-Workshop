@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alumni Portal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+    html,body { height:100%; }
+    body { background: linear-gradient(180deg,#071129 0%, #071524 60%); color:#e6eef6; -webkit-font-smoothing:antialiased; }
+    .bg-accent { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-accent .blob { position: absolute; border-radius:50%; filter: blur(80px); opacity:0.16; transform: translateZ(0); }
+    .bg-accent .b1{ width:520px;height:520px; background:radial-gradient(circle at 30% 30%, rgba(124,58,237,0.95), rgba(124,58,237,0.25) 40%, transparent 60%); left:-120px; top:-80px; animation:float1 12s ease-in-out infinite; }
+    .bg-accent .b2{ width:420px;height:420px; background:radial-gradient(circle at 70% 70%, rgba(6,182,212,0.92), rgba(20,184,166,0.20) 40%, transparent 60%); right:-100px; bottom:-110px; animation:float2 14s ease-in-out infinite; opacity:0.12; }
+    @keyframes float1{0%{transform:translateY(0)}50%{transform:translateY(18px) translateX(16px)}100%{transform:translateY(0)}}
+    @keyframes float2{0%{transform:translateY(0)}50%{transform:translateY(-14px) translateX(-18px)}100%{transform:translateY(0)}}
+    header { position: sticky; top:0; z-index:12; background: linear-gradient(180deg, rgba(4,6,15,0.6), rgba(6,8,20,0.3)); backdrop-filter: blur(8px); border-bottom:1px solid rgba(148,163,184,0.06); }
+    .container { max-width:1200px; margin:0 auto; padding:20px; position:relative; z-index:1; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand h1 { font-size:1.9rem; letter-spacing:.6px; margin-right:18px; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:18px; font-weight:700; }
+    .hero { padding:8px 20px 4px; text-align:center; animation:fadeIn .7s ease-in-out; }
+    .hero-title { font-size:1.9rem; color:#fff; font-weight:800; margin-bottom:4px; }
+    .controls { padding:6px 12px 12px; animation:slideDown .6s ease-in-out; }
+    .controls-inner { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; }
+    .input, .select { background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); color:#e6eef6; padding:12px 14px; border-radius:12px; min-width:260px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
+    .input::placeholder { color:#93a6bd; }
+    /* ensure dropdown option text is readable */
+    option, select option, .input option, .select option { color: #000 !important; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; padding:8px 20px 28px; }
+    @media (max-width:1100px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,255,252,0.98)); color:#064e3b; border:1px solid rgba(6,78,59,0.08); border-radius:16px; overflow:hidden; transition: transform .32s cubic-bezier(.2,.9,.2,1), box-shadow .32s ease; opacity:0; transform:translateY(22px); animation:fadeUp .8s forwards; cursor:pointer; box-shadow: 0 10px 30px rgba(2,6,23,0.5); }
+    .card img{ display:block; width:100%; height:220px; object-fit:cover; transition: transform .6s ease; }
+    .card:hover img{ transform:scale(1.05); }
+    .card-body { padding:18px; }
+    .badge { display:inline-block; font-size:.78rem; padding:6px 10px; border-radius:999px; background:linear-gradient(90deg,#06b6d4,#14b8a6); color:#fff; font-weight:700; margin-bottom:10px; }
+    .title { font-size:1.28rem; margin-bottom:8px; color:#064e3b; font-weight:700; }
+    .desc { font-size:1rem; color:#0f766e; min-height:52px; line-height:1.35; }
+    .meta { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:#6b7f8f; font-size:.95rem; }
+    .btn { display:inline-block; margin-top:12px; background:linear-gradient(90deg,#7c3aed,#06b6d4); color:#fff; text-decoration:none; font-weight:700; padding:12px 14px; border-radius:12px; border:none; cursor:pointer; }
+    footer { border-top:1px solid rgba(148,163,184,0.06); padding:28px; text-align:center; color:#93a6bd; }
+    @keyframes fadeIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp{ from{ opacity:0; transform:translateY(20px);} to{ opacity:1; transform:translateY(0);} }
+    @keyframes slideDown{ from{ opacity:0; transform:translateY(-18px);} to{ opacity:1; transform:translateY(0);} }
+    @media (prefers-reduced-motion: reduce){ .bg-accent .blob, .card{ animation:none !important; transition:none !important; } }
+    /* small modal styles */
+    .modal-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(2,6,23,0.5); z-index:200; }
+    .modal { background:#fff; border-radius:10px; max-width:720px; width:94%; color:#06201f; }
+  </style>
+</head>
+<body>
+  <div class="bg-accent" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div></div>
+
+  <header>
+    <div class="container brand" style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:12px">
+        <h1 id="brandTitle">Alumni Portal</h1>
+        <nav class="nav">
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </nav>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="position:relative">
+          <button id="headerAccountBtn" class="btn" aria-haspopup="true" aria-expanded="false" title="Account" style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" fill="currentColor"/><path d="M3 20c0-3.866 3.134-7 7-7h4c3.866 0 7 3.134 7 7v1H3v-1z" fill="currentColor"/></svg>
+          </button>
+          <button id="myProfileBtn" title="My Profile" class="btn" style="margin-left:8px;display:none;align-items:center;gap:8px;padding:8px 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" fill="currentColor"/><path d="M3 20c0-3.866 3.134-7 7-7h4c3.866 0 7 3.134 7 7v1H3v-1z" fill="currentColor"/></svg>
+          </button>
+          <div id="accountDropdown" style="position:absolute;right:0;top:46px;min-width:160px;background:#fff;color:#06201f;border-radius:8px;box-shadow:0 10px 30px rgba(2,6,23,0.3);padding:8px;display:none;z-index:80">
+            <button id="headerLogout" style="width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;cursor:pointer;color:#b91c1c">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-title">IIIT NR Alumni Portal — Connect, Discover, Grow</div>
+      <div class="hero-sub">Browse alumni, find opportunities, and keep the community alive. Use the filters to quickly narrow results.</div>
+    </div>
+  </section>
+
+  <section class="controls" id="alumni">
+    <div class="container">
+      <div class="controls-inner">
+        <input id="search" class="input" type="search" placeholder="Search alumni by name or keywords...">
+        <select id="branch" class="select">
+          <option value="all">All Branches</option>
+          <option value="cse">CSE</option>
+          <option value="ece">ECE</option>
+          <option value="dsai">DSAI</option>
+        </select>
+        <select id="batch" class="select">
+          <option value="all">All Batches</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+        </select>
+        <select id="company" class="select">
+          <option value="all">All Companies</option>
+          <option value="google">Google</option>
+          <option value="microsoft">Microsoft</option>
+          <option value="amazon">Amazon</option>
+        </select>
+        <div id="resultCount" aria-live="polite" style="align-self:center;color:#94a3b8;margin-left:8px">Showing <strong id="countNum">0</strong> profiles</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div id="cards" class="grid"></div>
+    </div>
+  </section>
+
+  <section id="about" class="hero">
+    <div class="container">
+      <h2>About Alumni Network</h2>
+      <p>Our Alumni Portal helps you stay connected with classmates, discover opportunities, and give back to your community.</p>
+    </div>
+  </section>
+
+  <section id="contact" class="hero">
+    <div class="container">
+      <h2>Contact</h2>
+      <p>Email: alumni@yourcollege.edu • Phone: +91-9876543210</p>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 Your College Alumni • Built with ❤️
+  </footer>
+
+  <!-- My Account Modal -->
+  <div id="accountModal" class="modal-overlay" aria-hidden="true" style="display:none;align-items:center;justify-content:center;">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="My account" style="width:min(720px,94%);max-width:720px;">
+      <div style="padding:18px;">
+        <h3 style="color:#06201f;margin:0 0 8px 0">My Account</h3>
+        <p style="margin:0 0 12px 0;color:#254">Enter your login id (email or username) to load your profile. This will query the server for a matching profile.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="acctLoginId" placeholder="email or username" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06)" />
+          <button id="acctLoadBtn" class="btn" style="background:linear-gradient(90deg,#06b6d4,#10b981);">Load</button>
+        </div>
+        <div id="acctStatus" style="color:#4b6b74;margin-bottom:8px"></div>
+        <div id="acctContent" style="background:#fff;padding:12px;border-radius:8px;color:#06201f;display:none">
+          <img id="acctImg" src="" alt="profile" style="width:120px;height:120px;object-fit:cover;border-radius:8px;float:left;margin-right:12px">
+          <div style="overflow:hidden">
+            <div id="acctName" style="font-weight:800;font-size:1.1rem"></div>
+            <div id="acctMeta" style="color:#4b6b74;margin-top:6px"></div>
+            <p id="acctDesc" style="margin-top:10px;color:#254"></p>
+            <div style="margin-top:12px">
+              <button id="acctEditBtn" class="btn">Edit Profile</button>
+              <button id="acctLogoutBtn" class="btn secondary" style="margin-left:8px">Logout</button>
+              <button id="acctCloseBtn" class="btn secondary" style="margin-left:8px">Close</button>
+            </div>
+          </div>
+          <div style="clear:both"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  let alumniData = [];
+
+  const cardsRoot = document.getElementById('cards');
+  const searchInput = document.getElementById('search');
+  const branchSelect = document.getElementById('branch');
+  const batchSelect = document.getElementById('batch');
+  const companySelect = document.getElementById('company');
+  const countNum = document.getElementById('countNum');
+  const brandTitle = document.getElementById('brandTitle');
+
+  function createCard(alumni) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${alumni.image}" alt="${alumni.name}">
+      <div class="card-body">
+        <span class="badge">${(alumni.branch||'').toUpperCase()}</span>
+        <div class="title">${alumni.name}</div>
+        <p class="desc">${alumni.desc || ''}</p>
+        <div class="meta">
+          <span>${alumni.batch || ''} Batch</span>
+          <span>${alumni.company || ''}</span>
+        </div>
+        <button class="btn" aria-label="View profile of ${alumni.name}">View Profile</button>
+      </div>
+    `;
+    return card;
+  }
+
+  function render(list) {
+    cardsRoot.innerHTML = '';
+    list.forEach((alumni, idx) => {
+      const c = createCard(alumni);
+      c.style.setProperty('--i', idx);
+      c.setAttribute('data-index', idx);
+      c.classList.add('reveal-target');
+      cardsRoot.appendChild(c);
+    });
+    countNum.textContent = list.length;
+  }
+
+  function applyFilters() {
+    const q = (searchInput.value || '').trim().toLowerCase();
+    const br = branchSelect.value;
+    const ba = batchSelect.value;
+    const co = companySelect.value;
+    const filtered = alumniData.filter(a => {
+      const inText = `${a.name} ${a.desc || ''} ${a.company || ''}`.toLowerCase().includes(q);
+      const inBranch = br === 'all' ? true : (a.branch === br);
+      const inBatch = ba === 'all' ? true : (a.batch === ba);
+      const inCompany = co === 'all' ? true : (a.company === co);
+      return inText && inBranch && inBatch && inCompany;
+    });
+    render(filtered);
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  branchSelect.addEventListener('change', applyFilters);
+  batchSelect.addEventListener('change', applyFilters);
+  companySelect.addEventListener('change', applyFilters);
+
+  brandTitle.addEventListener('click', () => {
+    searchInput.value = '';
+    branchSelect.value = 'all';
+    batchSelect.value = 'all';
+    companySelect.value = 'all';
+    applyFilters();
+  });
+
+  // API settings: prefer 127.0.0.1:4000 (MySQL-backed API must run there)
+  let API_BASE = 'http://127.0.0.1:4000';
+  const params = new URLSearchParams(window.location.search);
+  const explicitBase = params.get('apiBase');
+  const portParam = params.get('apiPort');
+  const hostParam = params.get('apiHost');
+  if (explicitBase) {
+    API_BASE = explicitBase.replace(/\/$/, '');
+  } else if (hostParam || portParam) {
+    const host = hostParam || '127.0.0.1';
+    const port = portParam || '4000';
+    API_BASE = `http://${host}:${port}`;
+  }
+
+  // ALWAYS require live API (no local fallback)
+  const FORCE_API = true;
+
+  // status + diagnostics
+  const controlsContainer = document.querySelector('.controls .container');
+  const apiStatusEl = document.createElement('div');
+  apiStatusEl.style.marginTop = '8px';
+  apiStatusEl.style.color = '#9fb8cc';
+  apiStatusEl.id = 'apiStatus';
+  if (controlsContainer) controlsContainer.appendChild(apiStatusEl);
+
+  const diag = document.createElement('div');
+  diag.id = 'diagnostics';
+  diag.style.marginTop = '6px';
+  diag.style.fontSize = '0.9rem';
+  diag.style.color = '#9fb8cc';
+  diag.innerHTML = `<strong>Diagnostics:</strong> <span id="diagMsg">checking...</span>`;
+  if (controlsContainer) controlsContainer.appendChild(diag);
+
+  // robust probe: try multiple hosts/ports, retries
+  async function checkApi() {
+    const parsed = new URL(API_BASE);
+    const baseHost = parsed.hostname || '127.0.0.1';
+    const forcePort = params.get('apiPort') || parsed.port || '4000';
+    const portCandidates = forcePort ? [String(forcePort)] : ['4000','4100'];
+    const hostCandidates = [baseHost, params.get('apiHost') || '', '127.0.0.1', 'localhost', '[::1]']
+      .filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
+
+    const maxAttempts = 3;
+    const timeoutMs = 3000;
+
+    async function tryFetch(url) {
+      try {
+        const controller = new AbortController();
+        const id = setTimeout(()=>controller.abort(), timeoutMs);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(id);
+        return res;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    for (let attempt=1; attempt<=maxAttempts; attempt++){
+      for (const h of hostCandidates){
+        for (const p of portCandidates){
+          const healthUrl = `http://${h}:${p}/health`;
+          apiStatusEl.textContent = `Checking API ${healthUrl} (attempt ${attempt}/${maxAttempts})...`;
+          try {
+            const res = await tryFetch(healthUrl);
+            if (res && res.ok) {
+              API_BASE = `http://${h}:${p}`;
+              apiStatusEl.textContent = `API reachable at ${API_BASE}`;
+              apiStatusEl.style.color = '#8ef';
+              try { document.getElementById('diagMsg').textContent = `API reachable at ${API_BASE}`; } catch(e){}
+              return true;
+            }
+            // check /api/alumni if /health missing
+            const apiUrl = `http://${h}:${p}/api/alumni`;
+            const apiRes = await tryFetch(apiUrl);
+            if (apiRes) {
+              const ct = (apiRes.headers.get('content-type')||'').toLowerCase();
+              if (ct.includes('application/json') && apiRes.ok) {
+                API_BASE = `http://${h}:${p}`;
+                apiStatusEl.textContent = `API reachable at ${API_BASE}`;
+                apiStatusEl.style.color = '#8ef';
+                try { document.getElementById('diagMsg').textContent = `API reachable at ${API_BASE}`; } catch(e){}
+                return true;
+              }
+              if (ct.includes('text/html')) {
+                apiStatusEl.textContent = `HTML received from ${apiUrl} (static server on API port).`;
+                apiStatusEl.style.color = '#ff8a8a';
+                try { document.getElementById('diagMsg').textContent = `HTML received from ${apiUrl} (static server on API port).`; } catch(e){}
+                continue;
+              }
+            }
+          } catch(e){
+            // noop
+          }
+        }
+      }
+      await new Promise(r => setTimeout(r, 500 * attempt));
+    }
+
+    apiStatusEl.textContent = `Cannot reach API on hosts ${hostCandidates.join(', ')} ports ${portCandidates.join(', ')}.`;
+    apiStatusEl.style.color = '#ff8a8a';
+    try { document.getElementById('diagMsg').textContent = 'API unreachable (required)'; } catch(e){}
+    return false;
+  }
+
+  // load from server only (no fallback)
+  async function loadFromServer() {
+    const ok = await checkApi();
+    if (!ok) {
+      apiStatusEl.textContent = `API unreachable and API-only is enabled; not loading local fallback. Start the API server.`;
+      apiStatusEl.style.color = '#ff8a8a';
+      return;
+    }
+    try {
+      const res = await fetch(API_BASE.replace(/\/$/,'') + '/api/alumni', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Server responded ' + res.status);
+      const rows = await res.json();
+      alumniData = rows.map(r => {
+        let image = '';
+        if (r.image) image = r.image.startsWith('http') ? r.image : (API_BASE.replace(/\/$/,'') + (r.image.startsWith('/') ? r.image : '/' + r.image));
+        else image = 'https://picsum.photos/seed/' + encodeURIComponent(r.name || 'anon') + '/800/600';
+        return { name: r.name, branch: r.branch || '', batch: r.batch || '', company: r.company || '', desc: r.description || r.desc || '', image: image, id: r.id };
+      });
+      applyFilters();
+      try { document.getElementById('diagMsg').textContent = `Loaded ${alumniData.length} rows from API (X-Data-Source: mysql)`; } catch(e){}
+      apiStatusEl.textContent = `Loaded ${alumniData.length} rows from API`;
+      apiStatusEl.style.color = '#8ef';
+    } catch (err) {
+      console.error('Failed to load alumni', err);
+      apiStatusEl.textContent = 'Failed to load alumni: ' + (err.message || err.name) + '. Ensure API is running.';
+      apiStatusEl.style.color = '#ff8a8a';
+    }
+  }
+
+  loadFromServer();
+
+  // IntersectionObserver for reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const el = entry.target;
+      if (entry.isIntersecting) {
+        el.classList.add('in-view');
+        observer.unobserve(el);
+      }
+    });
+  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.15 });
+
+  const observeCards = () => {
+    document.querySelectorAll('.card').forEach(card => observer.observe(card));
+  };
+
+  // override render to observe
+  const _origRender = render;
+  render = function(list){
+    cardsRoot.innerHTML = '';
+    list.forEach((alumni, idx) => {
+      const c = createCard(alumni);
+      c.style.setProperty('--i', idx);
+      c.setAttribute('data-index', idx);
+      cardsRoot.appendChild(c);
+    });
+    countNum.textContent = list.length;
+    observeCards();
+  }
+
+  // --- My Account modal wiring ---
+  (function(){
+    const myBtn = document.getElementById('headerAccountBtn');
+    const accountDropdown = document.getElementById('accountDropdown');
+    const modal = document.getElementById('accountModal');
+    const loginInput = document.getElementById('acctLoginId');
+    const loadBtn = document.getElementById('acctLoadBtn');
+    const statusEl = document.getElementById('acctStatus');
+    const content = document.getElementById('acctContent');
+    const imgEl = document.getElementById('acctImg');
+    const nameEl = document.getElementById('acctName');
+    const metaEl = document.getElementById('acctMeta');
+    const descEl = document.getElementById('acctDesc');
+    const editBtn = document.getElementById('acctEditBtn');
+    const closeBtn = document.getElementById('acctCloseBtn');
+    const acctLogoutBtn = document.getElementById('acctLogoutBtn');
+    const headerLogout = document.getElementById('headerLogout');
+
+  const LS_KEY = 'alumni_login_id';
+  function setRemembered(id){ if (id) localStorage.setItem(LS_KEY, id); else localStorage.removeItem(LS_KEY); if (headerLogout) headerLogout.style.display = id ? '' : 'none'; }
+  function getRemembered(){ return localStorage.getItem(LS_KEY); }
+  // hide logout if no remembered user
+  try { const existing = getRemembered(); if (headerLogout) headerLogout.style.display = existing ? '' : 'none'; } catch(e) {}
+
+    function openModal(){ modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false'); statusEl.textContent = ''; content.style.display = 'none'; const remembered = getRemembered(); if (remembered) { loginInput.value = remembered; fetchAndShow(remembered); } else { loginInput.focus(); } }
+    function closeModal(){ modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); }
+
+    function doLogout(){ setRemembered(null); try { window.location.href = 'login.html'; } catch (e) {} }
+
+    function toggleDropdown(){
+      if (!accountDropdown) return;
+      const isOpen = accountDropdown.style.display === 'block';
+      accountDropdown.style.display = isOpen ? 'none' : 'block';
+      myBtn && myBtn.setAttribute('aria-expanded', String(!isOpen));
+    }
+
+    myBtn && myBtn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toggleDropdown(); });
+    document.addEventListener('click', (e)=>{ if (accountDropdown && !accountDropdown.contains(e.target) && !myBtn.contains(e.target)) accountDropdown.style.display = 'none'; });
+
+    closeBtn && closeBtn.addEventListener('click', closeModal);
+    modal && modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
+    headerLogout && headerLogout.addEventListener('click', ()=>{ 
+      try {
+        const prefix = 'alumni_';
+        for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.indexOf(prefix) === 0) localStorage.removeItem(k); }
+        for (let i = sessionStorage.length - 1; i >= 0; i--) { const k = sessionStorage.key(i); if (k && k.indexOf(prefix) === 0) sessionStorage.removeItem(k); }
+        setRemembered(null);
+        localStorage.removeItem(LS_KEY);
+      } catch(e){}
+      try { const lbl = myBtn && myBtn.querySelector('.label'); if (lbl) lbl.textContent = 'Account'; if (accountDropdown) accountDropdown.style.display='none'; myBtn && myBtn.setAttribute('aria-expanded','false'); } catch(e){}
+      try { const params = new URLSearchParams(window.location.search); let target = (params.get('afterLogout')||'').trim() || 'mainad.html'; if (/^https?:\/\//i.test(target)) { const parsed=new URL(target, window.location.origin); if (parsed.origin !== window.location.origin) target='mainad.html'; } window.location.href = target; } catch(e){ window.location.href='mainad.html'; }
+    });
+    acctLogoutBtn && acctLogoutBtn.addEventListener('click', ()=>{ try{ const prefix='alumni_'; for (let i=localStorage.length-1;i>=0;i--){ const k=localStorage.key(i); if(k&&k.indexOf(prefix)===0) localStorage.removeItem(k);} for(let i=sessionStorage.length-1;i>=0;i--){ const k=sessionStorage.key(i); if(k&&k.indexOf(prefix)===0) sessionStorage.removeItem(k);} setRemembered(null); }catch(e){} closeModal(); try{ const params=new URLSearchParams(window.location.search); let target=(params.get('afterLogout')||'').trim()||'mainad.html'; if(/^https?:\/\//i.test(target)){ const parsed=new URL(target, window.location.origin); if(parsed.origin!==window.location.origin) target='mainad.html'; } window.location.href=target;}catch(e){ window.location.href='mainad.html'; } });
+
+    async function fetchAndShow(loginId){
+      statusEl.style.color = '#256';
+      statusEl.textContent = 'Looking up profile...';
+      content.style.display = 'none';
+      try {
+        const ok = await checkApi();
+        if (!ok) {
+          statusEl.style.color = '#b55';
+          statusEl.textContent = 'API unreachable. Please start the server.';
+          return;
+        }
+        const res = await fetch(API_BASE.replace(/\/$/,'') + '/api/alumni');
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        const rows = await res.json();
+        const q = (loginId || '').trim().toLowerCase();
+        const found = rows.find(r => (r.login_id && String(r.login_id).toLowerCase()===q) || (r.login_id && String(r.login_id).toLowerCase().includes(q)) || (r.name && String(r.name).toLowerCase().includes(q)));
+        if (!found) {
+          statusEl.style.color = '#b55';
+          statusEl.textContent = 'No profile found for "' + loginId + '". You can create one via New Profile.';
+          return;
+        }
+        const image = found.image ? (found.image.startsWith('http') ? found.image : API_BASE.replace(/\/$/,'') + (found.image.startsWith('/') ? found.image : '/' + found.image)) : 'https://picsum.photos/seed/' + encodeURIComponent(found.name||'anon') + '/400/300';
+        imgEl.src = image;
+        nameEl.textContent = found.name || '';
+        metaEl.textContent = ((found.branch||'') + ' • ' + (found.company||'') + (found.batch ? (' • ' + found.batch + ' Batch') : '')).replace(/^\s*•\s*/,'');
+        descEl.textContent = found.description || found.desc || '';
+        content.style.display = '';
+        statusEl.textContent = '';
+        setRemembered(loginId);
+        editBtn.onclick = () => { window.location.href = 'create_profile.html'; };
+      } catch (err) {
+        console.error(err);
+        statusEl.style.color = '#b55';
+        statusEl.textContent = 'Error loading profile: ' + (err && err.message ? err.message : 'unknown');
+      }
+    }
+
+    loadBtn && loadBtn.addEventListener('click', ()=>{ const v = (loginInput.value||'').trim(); if (!v) { statusEl.style.color='#b55'; statusEl.textContent = 'Please enter your login id'; return; } fetchAndShow(v); });
+    loginInput && loginInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') { e.preventDefault(); loadBtn.click(); } });
+
+    const existing = getRemembered(); if (existing && headerLogout) headerLogout.style.display = '';
+    try { const my = document.getElementById('myProfileBtn'); if (my) { my.style.display = existing ? '' : 'none'; if (existing) my.addEventListener('click', ()=>{ window.location.href = 'profile.html?id='+encodeURIComponent(existing); }); } } catch(e) {}
+  })();
+  </script>
+</body>
+</html>

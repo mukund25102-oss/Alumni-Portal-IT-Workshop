@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:#7c3aed;--muted:#9fb8cc}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071129,#081424);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{width:min(980px,95%);background:linear-gradient(180deg,#ffffff, #f8fafc);color:#06201f;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(2,6,23,0.6);transform:translateY(40px);opacity:0;animation:enter 560ms cubic-bezier(.2,.9,.2,1) forwards}
+    @keyframes enter{to{transform:none;opacity:1}}
+    .hero{display:flex;gap:24px;padding:28px}
+    .avatar{width:320px;height:320px;border-radius:12px;overflow:hidden;flex:0 0 320px}
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .body{flex:1;padding:4px 6px}
+    h1{font-size:1.6rem;margin-bottom:6px}
+    .meta{color:var(--muted);margin-bottom:12px}
+    .contacts{display:flex;gap:12px;margin-bottom:12px}
+    .chip{background:rgba(124,58,237,0.08);padding:8px 12px;border-radius:999px;color:var(--accent);font-weight:700}
+    .desc{background:#fff;border-radius:8px;padding:12px;margin-bottom:12px;color:#0f172a}
+    .controls{display:flex;gap:8px}
+    .btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(124,58,237,0.14)}
+    form .row{display:flex;gap:8px;margin-bottom:8px}
+    input[type=text],input[type=email],textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06)}
+    textarea{min-height:120px}
+    .fade-in{animation:fadeIn 420ms ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="hero">
+      <div class="avatar"><img id="img" src="https://picsum.photos/seed/anon/800/800" alt="avatar"></div>
+      <div class="body">
+        <h1 id="name">Name</h1>
+        <div class="meta" id="meta">Branch • Batch • Company</div>
+        <div class="contacts">
+          <div class="chip" id="role">Role</div>
+          <div class="chip" id="loginId">login_id</div>
+        </div>
+        <div class="desc" id="desc">Description</div>
+        <div id="contactBlock" style="margin-top:12px" class="fade-in">
+          <div style="margin-bottom:8px"><strong>Contact</strong></div>
+          <div id="emailRow">Email: <a id="emailLink" href="#">n/a</a></div>
+          <div id="phoneRow">Phone: <span id="phoneText">n/a</span></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="controls">
+          <button id="editBtn" class="btn ghost">Edit</button>
+          <button id="saveBtn" class="btn" style="display:none">Save</button>
+          <button id="cancelBtn" class="btn ghost" style="display:none">Cancel</button>
+          <button id="deleteBtn" class="btn" style="background:#ef4444;display:none">Delete</button>
+          <button id="backBtn" class="btn ghost">Back</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:18px;display:none" id="editArea">
+      <form id="editForm">
+        <div class="row"><input type="text" name="name" placeholder="Full name" id="f_name"><input type="text" name="login_id" placeholder="Login ID" id="f_login"></div>
+        <div class="row"><input type="text" name="branch" placeholder="Branch" id="f_branch"><input type="text" name="batch" placeholder="Batch" id="f_batch"></div>
+        <div class="row"><input type="text" name="company" placeholder="Company" id="f_company"><input type="text" name="role" placeholder="Role" id="f_role"></div>
+        <div class="row"><input type="email" name="email" placeholder="Email" id="f_email"><input type="text" name="phone" placeholder="Phone" id="f_phone"></div>
+        <div style="margin-top:8px"><textarea name="description" id="f_desc" placeholder="Description"></textarea></div>
+      </form>
+    </div>
+  </div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  // Determine API base: prefer ?apiBase=, otherwise try common local ports (4000,4100), then window.origin
+  const explicit = params.get('apiBase');
+  const candidates = [];
+  if (explicit) candidates.push(explicit.replace(/\/$/, ''));
+  candidates.push('http://127.0.0.1:4000');
+  candidates.push('http://127.0.0.1:4100');
+  candidates.push(window.location.origin);
+
+  async function findApiBase() {
+    for (const c of candidates) {
+      try {
+        const url = (c.endsWith('/')?c.slice(0,-1):c) + '/api/alumni/' + encodeURIComponent(id);
+        const controller = new AbortController();
+        const to = setTimeout(() => controller.abort(), 3000);
+        const r = await fetch(url, { signal: controller.signal });
+        clearTimeout(to);
+        if (r.ok) return c.replace(/\/$/, '');
+      } catch (e) {
+        // try next
+      }
+    }
+    // fallback to first candidate
+    return candidates[0];
+  }
+  const img = document.getElementById('img');
+  const nameEl = document.getElementById('name');
+  const meta = document.getElementById('meta');
+  const roleEl = document.getElementById('role');
+  const loginEl = document.getElementById('loginId');
+  const desc = document.getElementById('desc');
+  const emailLink = document.getElementById('emailLink');
+  const phoneText = document.getElementById('phoneText');
+  const editBtn = document.getElementById('editBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const backBtn = document.getElementById('backBtn');
+  const editArea = document.getElementById('editArea');
+  const card = document.getElementById('card');
+
+  let profile = null;
+  let currentUserRole = null; // try to detect from localStorage
+  try { currentUserRole = (localStorage.getItem('alumni_user_role')||'').toLowerCase(); } catch(e){}
+
+  async function load(){
+    if (!id) return alert('No profile id');
+    try {
+      const base = await findApiBase();
+      const one = await fetch(base.replace(/\/$/, '') + '/api/alumni/' + encodeURIComponent(id));
+      if (one.ok) {
+        profile = await one.json(); render(); return;
+      }
+      // list fallback
+      const res = await fetch(base.replace(/\/$/, '') + '/api/alumni');
+      const rows = await res.json();
+      profile = rows.find(x=>String(x.id)===String(id));
+      if (!profile) return alert('Profile not found');
+      render();
+    } catch (e) { console.error(e); alert('Failed to load profile: '+(e&&e.message?e.message:e)); }
+  }
+
+  function render(){
+    img.src = profile.image ? (profile.image.startsWith('http')?profile.image:API+profile.image) : 'https://picsum.photos/seed/'+encodeURIComponent(profile.name||'anon')+'/800/800';
+    nameEl.textContent = profile.name || '';
+    meta.textContent = ((profile.branch||'') + ' • ' + (profile.batch||'') + (profile.company?(' • '+profile.company):'')).replace(/^\s*•\s*/,'');
+    roleEl.textContent = (profile.role||'').toUpperCase();
+    loginEl.textContent = profile.login_id || '';
+    desc.textContent = profile.description || '';
+    emailLink.textContent = profile.email || 'n/a';
+    emailLink.href = profile.email ? ('mailto:'+profile.email) : '#';
+    phoneText.textContent = profile.phone || 'n/a';
+
+    const isOwner = (localStorage.getItem('alumni_login_id')||'').trim().toLowerCase() === String(profile.login_id||'').trim().toLowerCase();
+    const isAdmin = ((localStorage.getItem('alumni_user_role')||'') === 'admin') || ((localStorage.getItem('alumni_user_role')||'') === 'administrator');
+    if (isOwner || isAdmin) editBtn.style.display = ''; else editBtn.style.display = 'none';
+    if (isAdmin) deleteBtn.style.display = ''; else deleteBtn.style.display = 'none';
+  }
+
+  editBtn.addEventListener('click', ()=>{
+    editArea.style.display = '';
+    document.getElementById('f_name').value = profile.name || '';
+    document.getElementById('f_login').value = profile.login_id || '';
+    document.getElementById('f_branch').value = profile.branch || '';
+    document.getElementById('f_batch').value = profile.batch || '';
+    document.getElementById('f_company').value = profile.company || '';
+    document.getElementById('f_role').value = profile.role || '';
+    document.getElementById('f_email').value = profile.email || '';
+    document.getElementById('f_phone').value = profile.phone || '';
+    document.getElementById('f_desc').value = profile.description || '';
+    editBtn.style.display = 'none'; saveBtn.style.display=''; cancelBtn.style.display='';
+  });
+  cancelBtn.addEventListener('click', ()=>{ editArea.style.display='none'; editBtn.style.display=''; saveBtn.style.display='none'; cancelBtn.style.display='none'; });
+  backBtn.addEventListener('click', ()=>{ window.location.href='mainad.html'; });
+
+  saveBtn.addEventListener('click', async ()=>{
+    const body = {
+      name: document.getElementById('f_name').value,
+      login_id: document.getElementById('f_login').value,
+      branch: document.getElementById('f_branch').value,
+      batch: document.getElementById('f_batch').value,
+      company: document.getElementById('f_company').value,
+      role: document.getElementById('f_role').value,
+      email: document.getElementById('f_email').value,
+      phone: document.getElementById('f_phone').value,
+      description: document.getElementById('f_desc').value
+    };
+    try {
+      const res = await fetch(API + '/api/alumni/' + encodeURIComponent(id), { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error('Save failed: '+res.status+' '+t); }
+      const updated = await res.json(); profile = updated; render(); editArea.style.display='none'; saveBtn.style.display='none'; cancelBtn.style.display='none'; editBtn.style.display='';
+      alert('Saved');
+    } catch (e) { console.error(e); alert('Save error: '+(e&&e.message?e.message:e)); }
+  });
+
+  deleteBtn.addEventListener('click', async ()=>{
+    if (!confirm('Delete this profile?')) return;
+    try {
+      const res = await fetch(API + '/api/alumni/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed: '+res.status);
+      alert('Deleted'); window.location.href='mainad.html';
+    } catch (e) { console.error(e); alert('Delete error: '+(e&&e.message?e.message:e)); }
+  });
+
+  load();
+</script>
+</body>
+</html>

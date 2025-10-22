@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alumni Portal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+
+    /* Page base */
+    html,body { height: 100%; }
+    body { background: linear-gradient(180deg,#071129 0%, #081425 60%, #081a26 100%); color: #e6eef6; font-size: 16px; -webkit-font-smoothing:antialiased; }
+
+    /* Decorative animated blobs behind the content */
+    .bg-accent { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-accent .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.14; transform: translateZ(0); }
+    .bg-accent .b1 { width: 520px; height: 520px; background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.85), rgba(124,58,237,0.20) 45%, transparent 65%); left: -120px; top: -80px; animation: float1 12s ease-in-out infinite; }
+    .bg-accent .b2 { width: 460px; height: 460px; background: radial-gradient(circle at 70% 70%, rgba(6,182,212,0.80), rgba(20,184,166,0.18) 45%, transparent 65%); right: -100px; bottom: -110px; animation: float2 16s ease-in-out infinite; opacity: 0.12; }
+    .bg-accent .b3 { width: 380px; height: 380px; background: radial-gradient(circle at 50% 50%, rgba(56,189,248,0.65), rgba(56,189,248,0.16) 45%, transparent 70%); left: 40%; top: 20%; animation: float3 18s ease-in-out infinite; opacity: 0.10; }
+    @keyframes float1 { 0%{transform:translateY(0) translateX(0)}50%{transform:translateY(18px) translateX(16px)}100%{transform:translateY(0) translateX(0)} }
+    @keyframes float2 { 0%{transform:translateY(0) translateX(0)}50%{transform:translateY(-14px) translateX(-18px)}100%{transform:translateY(0) translateX(0)} }
+    @keyframes float3 { 0%{transform:translateY(0) translateX(0)}50%{transform:translateY(12px) translateX(-10px)}100%{transform:translateY(0) translateX(0)} }
+
+    header { position: sticky; top: 0; z-index: 12; background: linear-gradient(180deg, rgba(4,6,15,0.6), rgba(6,8,20,0.3)); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(148,163,184,0.06); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+    .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand h1 { font-size: 1.9rem; letter-spacing: 0.6px; margin-right: 18px; }
+    .nav a { color: #dbeafe; text-decoration: none; margin-left: 18px; font-weight: 700; }
+    .nav a:hover { color: #9be7ff; }
+  /* hamburger (left) */
+  .hamburger { background: transparent; border: none; width:48px; height:44px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; margin-right:10px; color: #dbeafe; }
+  .hamburger svg { width: 24px; height: 18px; transition: transform 260ms ease; }
+  .hamburger.open svg { transform: rotate(90deg) scale(0.98); opacity: 0.95; }
+
+  .item-num { display:inline-block; width:24px; height:24px; line-height:24px; text-align:center; margin-right:8px; background: rgba(255,255,255,0.04); color:#9be7ff; border-radius:6px; font-weight:800; }
+
+  /* side menu and overlay */
+  .side-overlay { position: fixed; inset: 0; background: rgba(2,6,23,0.5); z-index: 24; opacity: 0; pointer-events: none; transition: opacity 200ms ease; }
+  .side-overlay.show { opacity: 1; pointer-events: auto; }
+  .side-menu { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; transform: translateX(-100%); transition: transform 320ms cubic-bezier(.2,.9,.2,1); background: linear-gradient(180deg,#071427 0%, #071c2a 100%); z-index: 30; padding: 22px; box-shadow: 8px 0 30px rgba(2,6,23,0.6); color: #e6eef6; }
+  .side-menu.open { transform: translateX(0); }
+  .side-close { background: transparent; border: none; color: #9fb8cc; font-size: 20px; cursor: pointer; display:block; margin-left:auto; }
+  .side-list { margin-top: 18px; display:flex; flex-direction:column; gap: 10px; }
+  .side-item { background: transparent; border: none; text-align: left; padding: 10px 12px; color: #e6eef6; font-weight:700; border-radius:8px; cursor:pointer; }
+  .side-item:hover { background: rgba(255,255,255,0.02); }
+
+  /* profile modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(2,6,23,0.6); z-index: 60; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; color: #06201f; width: min(880px, 94%); max-width: 880px; border-radius: 12px; overflow: hidden; box-shadow: 0 24px 80px rgba(2,6,23,0.6); display: grid; grid-template-columns: 1fr 1fr; }
+  .modal .m-image { width:100%; height:100%; min-height: 260px; object-fit: cover; display:block; }
+  .modal .m-body { padding: 20px 22px; }
+  .m-title { font-size: 1.6rem; font-weight: 800; color: #023; margin-bottom: 8px; }
+  .m-badge { display:inline-block; padding:6px 10px; border-radius:999px; background: linear-gradient(90deg,#06b6d4,#14b8a6); color:#fff; font-weight:700; margin-bottom:10px; }
+  .m-meta { display:flex; gap:12px; color:#4b6b74; margin-top:8px; }
+  .m-actions { margin-top: 18px; display:flex; gap:10px; }
+  .m-btn { background: linear-gradient(90deg,#ef4444,#fb7185); color:#fff; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .m-btn.secondary { background: linear-gradient(90deg,#0ea5a4,#10b981); }
+  @media (max-width:760px) { .modal { grid-template-columns: 1fr; } .m-image{ height:180px; } }
+
+  /* Hero */
+  .hero { padding: 8px 20px 4px; text-align: center; animation: fadeIn 0.7s ease-in-out; }
+  .hero-title { font-size: 1.9rem; color: #fff; font-weight: 800; margin-bottom: 4px; }
+  .hero-sub { color: #9fb8cc; font-size: 0.98rem; margin-top: 3px; }
+
+  .controls { padding: 6px 12px 12px; animation: slideDown 0.6s ease-in-out; }
+  .controls-inner { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  /* result count */
+  #resultCount strong { color: #e6eef6; }
+  .input, .select { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); color: #e6eef6; padding: 12px 14px; border-radius: 12px; min-width: 260px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
+    .input::placeholder { color: #93a6bd; }
+
+  /* Dropdown option text: native dropdowns often have white background — force black text for readability */
+  option, select option, .input option, .select option { color: #000 !important; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 8px 20px 28px; }
+    @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,255,252,0.98) 100%);
+      color: #064e3b;
+      border: 1px solid rgba(6,78,59,0.08);
+      border-radius: 16px; 
+      overflow: hidden; 
+      transition: transform 0.32s cubic-bezier(.2,.9,.2,1), box-shadow 0.32s ease, border-color 0.32s ease, opacity 0.5s ease; 
+      opacity: 0; 
+      transform: translateY(22px) scale(0.98); 
+      cursor: pointer; box-shadow: 0 10px 30px rgba(2,6,23,0.5);
+    }
+    .card.in-view { opacity: 1; transform: translateY(0) scale(1); }
+    .card:hover { transform: translateY(-10px) rotate(-0.4deg) scale(1.03); border-color: rgba(6,78,59,0.16); box-shadow: 0 28px 60px rgba(2,6,23,0.56); }
+    .card img { transition: transform 0.6s ease; display:block; width:100%; height:220px; object-fit:cover; }
+    .card:hover img { transform: scale(1.05); }
+    /* staggered reveal */
+    .card[data-index] { animation-delay: calc(var(--i) * 70ms); }
+    .card-body { padding: 18px; }
+  .badge { display: inline-block; font-size: 0.78rem; padding: 6px 10px; border-radius: 999px; background: linear-gradient(90deg,#06b6d4,#14b8a6); color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .title { font-size: 1.28rem; margin-bottom: 8px; color: #064e3b; font-weight: 700; }
+  .desc { font-size: 1rem; color: #0f766e; min-height: 52px; line-height: 1.35; }
+    .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; color: #6b7f8f; font-size: 0.95rem; }
+  .btn { display: inline-block; margin-top: 12px; background: linear-gradient(90deg,#7c3aed,#06b6d4); color: #fff; text-decoration: none; font-weight: 700; padding: 12px 14px; border-radius: 12px; transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease; border: none; cursor: pointer; position: relative; overflow: hidden; }
+  .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(124,58,237,0.18); filter: saturate(1.05); }
+  /* ripple effect for buttons */
+  .btn::after, .m-btn::after { content: ""; position: absolute; left: 50%; top: 50%; width: 0; height: 0; background: rgba(255,255,255,0.35); transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none; }
+  .btn:active::after, .m-btn:active::after { width: 220px; height: 220px; transition: width 0.45s ease, height 0.45s ease; }
+
+    footer { border-top: 1px solid rgba(148,163,184,0.06); padding: 28px; text-align: center; color: #93a6bd; }
+
+    /* Inputs/Selects focus states */
+    .input, .select { outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+    .input:focus, .select:focus { border-color: rgba(124,58,237,0.28); box-shadow: 0 0 0 4px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.03); background: rgba(255,255,255,0.04); }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .bg-accent .blob { animation: none !important; }
+      .card { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- decorative animated background accents -->
+  <div class="bg-accent" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <header>
+    <div class="container brand">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="hamburger" class="hamburger" aria-label="Open menu" title="Menu">
+          <!-- SVG hamburger for crisp three lines -->
+          <svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect y="1" width="24" height="2" rx="1" fill="currentColor" />
+            <rect y="8" width="24" height="2" rx="1" fill="currentColor" />
+            <rect y="15" width="24" height="2" rx="1" fill="currentColor" />
+          </svg>
+        </button>
+        <h1 id="brandTitle">Alumni Portal</h1>
+      </div>
+      <!-- account button on the right -->
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="headerAccountBtn" class="btn" aria-haspopup="true" aria-expanded="false" title="Account" style="display:flex;align-items:center;gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" fill="currentColor"/><path d="M3 20c0-3.866 3.134-7 7-7h4c3.866 0 7 3.134 7 7v1H3v-1z" fill="currentColor"/></svg>
+          <span class="label" style="font-weight:700">Account</span>
+        </button>
+        <button id="myProfileBtn" title="My Profile" class="btn" style="margin-left:8px;display:none;align-items:center;gap:8px;padding:8px 10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" fill="currentColor"/><path d="M3 20c0-3.866 3.134-7 7-7h4c3.866 0 7 3.134 7 7v1H3v-1z" fill="currentColor"/></svg>
+        </button>
+        <div id="accountMenu" style="position:relative">
+          <div id="accountDropdown" style="position:absolute;right:0;top:46px;min-width:160px;background:#fff;color:#06201f;border-radius:8px;box-shadow:0 10px 30px rgba(2,6,23,0.3);padding:8px;display:none;z-index:80">
+            <button id="headerLogout" style="width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;cursor:pointer;color:#b91c1c">Logout</button>
+          </div>
+        </div>
+      </div>
+      </div>
+      <nav class="nav">
+        <!-- About and Contact removed per request -->
+      </nav>
+    </div>
+  </header>
+
+  <!-- sliding side menu + overlay -->
+  <div id="sideOverlay" class="side-overlay" aria-hidden="true"></div>
+  <aside id="sideMenu" class="side-menu" aria-hidden="true" role="dialog" aria-label="Main menu">
+    <button id="sideClose" class="side-close" aria-label="Close menu">✕</button>
+    <nav class="side-list" aria-label="Side navigation">
+      <button class="side-item" id="newProfileSide"><span class="item-num">1</span> ➕ New Profile</button>
+      <button class="side-item" id="manageProfilesSide"><span class="item-num">2</span> 🗂️ Manage Profiles</button>
+      <button class="side-item" id="searchSide"><span class="item-num">3</span> 🔎 Focus Search</button>
+      <button class="side-item" id="toggleFiltersSide"><span class="item-num">4</span> 🎚️ Toggle Filters</button>
+      <button class="side-item" id="exportSide"><span class="item-num">5</span> 📤 Export Data</button>
+    </nav>
+  </aside>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-title">IIIT NR Alumni Portal — Connect, Discover, Grow</div>
+      <div class="hero-sub">Browse alumni, find opportunities, and keep the community alive. Use the filters to quickly narrow results.</div>
+    </div>
+  </section>
+
+  <section class="controls" id="alumni">
+    <div class="container">
+      <div class="controls-inner">
+        <input id="search" class="input" type="search" placeholder="Search alumni by name or keywords...">
+        <select id="branch" class="select">
+          <option value="all">All Branches</option>
+          <option value="cse">CSE</option>
+          <option value="ece">ECE</option>
+          <option value="dsai">DSAI</option>
+        </select>
+        <select id="batch" class="select">
+          <option value="all">All Batches</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+        </select>
+        <select id="company" class="select">
+          <option value="all">All Companies</option>
+          <option value="google">Google</option>
+          <option value="microsoft">Microsoft</option>
+          <option value="amazon">Amazon</option>
+        </select>
+  <div id="resultCount" aria-live="polite" style="align-self:center;color:#94a3b8;margin-left:8px">Showing <strong id="countNum">0</strong> profiles</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div id="cards" class="grid"></div>
+    </div>
+  </section>
+
+  <!-- About and Contact sections removed -->
+
+  <footer>
+    © 2025 Your College Alumni • Built with ❤️
+  </footer>
+
+  <!-- profile modal -->
+  <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Profile details">
+      <img id="modalImage" class="m-image" src="" alt="profile image">
+      <div class="m-body">
+        <div class="m-title" id="modalName">Name</div>
+        <div class="m-badge" id="modalBranch">CSE</div>
+        <div class="m-meta"><div id="modalBatch">Batch</div><div id="modalCompany">Company</div></div>
+        <p id="modalDesc" style="margin-top:12px;color:#254">Description</p>
+        <div class="m-actions">
+          <button id="modalDelete" class="m-btn">Delete Profile</button>
+          <button id="modalClose" class="m-btn secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // in-memory cache (populated from server)
+  let alumniData = [];
+
+  const cardsRoot = document.getElementById('cards');
+    const searchInput = document.getElementById('search');
+    const branchSelect = document.getElementById('branch');
+    const batchSelect = document.getElementById('batch');
+    const companySelect = document.getElementById('company');
+  const countNum = document.getElementById('countNum');
+  const brandTitle = document.getElementById('brandTitle');
+
+    function createCard(alumni) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${alumni.image}" alt="${alumni.name}">
+        <div class="card-body">
+          <span class="badge">${alumni.branch.toUpperCase()}</span>
+          <div class="title">${alumni.name}</div>
+          <p class="desc">${alumni.desc}</p>
+          <div class="meta">
+            <span>${alumni.batch} Batch</span>
+            <span>${alumni.company}</span>
+          </div>
+          <button class="btn" aria-label="View profile of ${alumni.name}">View Profile</button>
+        </div>
+      `;
+      return card;
+    }
+
+    function render(list) {
+      cardsRoot.innerHTML = '';
+      list.forEach((alumni, idx) => {
+        const c = createCard(alumni);
+        c.style.setProperty('--i', idx);
+        c.setAttribute('data-index', idx);
+        c.classList.add('reveal-target');
+        cardsRoot.appendChild(c);
+      });
+      // result count
+      countNum.textContent = list.length;
+    }
+
+    function applyFilters() {
+      const q = searchInput.value.trim().toLowerCase();
+      const br = branchSelect.value;
+      const ba = batchSelect.value;
+      const co = companySelect.value;
+      const filtered = alumniData.filter(a => {
+        const inText = `${a.name} ${a.desc} ${a.company}`.toLowerCase().includes(q);
+        const inBranch = br === 'all' ? true : a.branch === br;
+        const inBatch = ba === 'all' ? true : a.batch === ba;
+        const inCompany = co === 'all' ? true : a.company === co;
+        return inText && inBranch && inBatch && inCompany;
+      });
+      render(filtered);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    branchSelect.addEventListener('change', applyFilters);
+    batchSelect.addEventListener('change', applyFilters);
+    companySelect.addEventListener('change', applyFilters);
+
+    // clicking the brand/title clears all filters (acts as an alumni-clear)
+    brandTitle.addEventListener('click', () => {
+      searchInput.value = '';
+      branchSelect.value = 'all';
+      batchSelect.value = 'all';
+      companySelect.value = 'all';
+      applyFilters();
+    });
+
+    // Flexible API base: default to 4100, allow override via ?apiPort=, ?apiHost=, or ?apiBase=
+  let API_BASE = 'http://localhost:4000';
+    const params = new URLSearchParams(window.location.search);
+    const explicitBase = params.get('apiBase');
+    const portParam = params.get('apiPort');
+    const hostParam = params.get('apiHost');
+    if (explicitBase) {
+      API_BASE = explicitBase.replace(/\/$/, '');
+    } else if (hostParam || portParam) {
+      const host = hostParam || 'localhost';
+      const port = portParam || '4100';
+      API_BASE = `http://${host}:${port}`;
+    }
+
+    const FORCE_API = (params.get('forceApi') === '1') || (localStorage.getItem('alumni_api_only') === '1');
+
+    // Small API status element to show connectivity and helpful errors
+    const controlsContainer = document.querySelector('.controls .container');
+    const apiStatusEl = document.createElement('div');
+    apiStatusEl.style.marginTop = '8px';
+    apiStatusEl.style.color = '#9fb8cc';
+    apiStatusEl.id = 'apiStatus';
+    if (controlsContainer) controlsContainer.appendChild(apiStatusEl);
+
+  // diagnostics widget to make source explicit in the UI
+  const diag = document.createElement('div');
+  diag.id = 'diagnostics';
+  diag.style.marginTop = '6px';
+  diag.style.fontSize = '0.9rem';
+  diag.style.color = '#9fb8cc';
+  diag.innerHTML = `<strong>Diagnostics:</strong> <span id="diagMsg">checking...</span> &nbsp; <label style="font-weight:600;margin-left:8px;color:#cde;"> <input type="checkbox" id="apiOnlyToggle"> API-only (no local fallback)</label>`;
+  if (controlsContainer) controlsContainer.appendChild(diag);
+  try { const t = document.getElementById('apiOnlyToggle'); t.checked = !!FORCE_API; t.addEventListener('change', (e)=>{ if (e.target.checked) localStorage.setItem('alumni_api_only','1'); else localStorage.removeItem('alumni_api_only'); apiStatusEl.textContent = e.target.checked ? 'API-only enabled. Reload to apply.' : 'API-only disabled. Reload to apply.'; }); } catch(e){}
+
+    async function checkApi() {
+      const parsed = new URL(API_BASE);
+      const port = (parsed.port || portParam || '4100');
+      const hosts = [hostParam || parsed.hostname || 'localhost', '127.0.0.1'];
+      for (const h of hosts) {
+        const url = `http://${h}:${port}/api/alumni`;
+        apiStatusEl.textContent = `Checking API at ${url} ...`;
+        try {
+          const controller = new AbortController();
+          const id = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(id);
+          const ct = (res.headers.get('content-type') || '').toLowerCase();
+          if (ct.includes('text/html')) {
+            apiStatusEl.textContent = `Received HTML from ${url}. It looks like a static server is running on the API port ${port}. Start the API server (see server/README.md).`;
+            apiStatusEl.style.color = '#ff8a8a';
+            continue;
+          }
+          if (res.ok) {
+            API_BASE = `http://${h}:${port}`;
+            apiStatusEl.textContent = `API reachable at ${API_BASE}`;
+            apiStatusEl.style.color = '#8ef';
+            return true;
+          } else {
+            apiStatusEl.textContent = `API reachable but returned ${res.status} at ${url}`;
+            apiStatusEl.style.color = '#ffcc66';
+          }
+        } catch (err) {
+          apiStatusEl.textContent = `Cannot reach API at ${url}: ${err.name || err.message}`;
+          apiStatusEl.style.color = '#ff8a8a';
+        }
+      }
+      return false;
+    }
+
+    // Load from local fallback JSON in ./alumni.json
+    async function loadLocalFallback() {
+      try {
+        apiStatusEl.textContent = 'API unreachable. Loading local alumni.json ...';
+        apiStatusEl.style.color = '#ffcc66';
+        const res = await fetch('alumni.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Missing alumni.json (' + res.status + ')');
+  const rows = await res.json();
+  try { document.getElementById('diagMsg').textContent = `Loaded ${rows.length} rows from API (X-Data-Source: ${res.headers.get('x-data-source') || 'unknown'})`; } catch(e){}
+  alumniData = rows.map(r => {
+          let image = '';
+          if (r.image) {
+            image = r.image.startsWith('http') ? r.image : r.image;
+          } else {
+            image = 'https://picsum.photos/seed/' + encodeURIComponent(r.name || 'anon') + '/800/600';
+          }
+          return { name: r.name, branch: r.branch || '', batch: r.batch || '', company: r.company || '', desc: r.description || r.desc || '', image: image, id: r.id || r.name };
+        });
+        applyFilters();
+        apiStatusEl.textContent = 'Loaded local data (alumni.json).';
+        apiStatusEl.style.color = '#9fb8cc';
+      } catch (err) {
+        apiStatusEl.textContent = 'Failed to load local alumni.json: ' + (err.message || err.name);
+        apiStatusEl.style.color = '#ff8a8a';
+        console.error('Local fallback failed', err);
+      }
+    }
+
+    // load from server (checks connectivity first)
+    async function loadFromServer() {
+      const ok = await checkApi();
+      if (!ok) {
+        if (FORCE_API) { apiStatusEl.textContent = `API unreachable and API-only is enabled; not using local fallback.`; apiStatusEl.style.color = '#ff8a8a'; try { document.getElementById('diagMsg').textContent = 'API-only mode: no data loaded (API unreachable)'; } catch(e){}; return; }
+        return loadLocalFallback();
+      }
+      try {
+        const res = await fetch(API_BASE + '/api/alumni');
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        const rows = await res.json();
+        alumniData = rows.map(r => {
+          // server stores image as a path like '/uploads/<file>' or an absolute URL
+          let image = '';
+          if (r.image) {
+            image = r.image.startsWith('http') ? r.image : (API_BASE.replace(/\/$/, '') + r.image);
+          } else {
+            image = 'https://picsum.photos/seed/' + encodeURIComponent(r.name || 'anon') + '/800/600';
+          }
+          return { name: r.name, branch: r.branch || '', batch: r.batch || '', company: r.company || '', desc: r.description || r.desc || '', image: image, id: r.id };
+        });
+        applyFilters();
+      } catch (err) {
+        console.error('Failed to load alumni', err);
+        apiStatusEl.textContent = 'Failed to load alumni: ' + (err.message || err.name);
+        apiStatusEl.style.color = '#ff8a8a';
+        alert('Failed to load alumni. See status line on this page for details.');
+      }
+    }
+    loadFromServer();
+
+    // IntersectionObserver for smooth, soothing scroll reveal of cards
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        if (entry.isIntersecting) {
+          el.classList.add('in-view');
+          observer.unobserve(el);
+        }
+      });
+    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.15 });
+
+    const observeCards = () => {
+      document.querySelectorAll('.card').forEach(card => observer.observe(card));
+    };
+
+    // Observe after initial render and on subsequent renders
+    const _origRender = render;
+    render = function(list){
+      cardsRoot.innerHTML = '';
+      list.forEach((alumni, idx) => {
+        const c = createCard(alumni);
+        c.style.setProperty('--i', idx);
+        c.setAttribute('data-index', idx);
+        cardsRoot.appendChild(c);
+      });
+      countNum.textContent = list.length;
+      observeCards();
+    }
+    // Gentle parallax for background blobs for a more soothing feel
+    let lastScrollY = 0;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY || 0;
+      const dy = y - lastScrollY;
+      lastScrollY = y;
+      const b1 = document.querySelector('.bg-accent .b1');
+      const b2 = document.querySelector('.bg-accent .b2');
+      const b3 = document.querySelector('.bg-accent .b3');
+      if (b1) b1.style.transform = `translateY(${y * 0.03}px)`;
+      if (b2) b2.style.transform = `translateY(${-y * 0.02}px)`;
+      if (b3) b3.style.transform = `translateY(${y * 0.015}px)`;
+    }, { passive: true });
+
+    // --- Side menu behavior ---
+    const hamburger = document.getElementById('hamburger');
+    const sideMenu = document.getElementById('sideMenu');
+    const sideOverlay = document.getElementById('sideOverlay');
+    const sideClose = document.getElementById('sideClose');
+    const newProfileSide = document.getElementById('newProfileSide');
+    const manageProfilesSide = document.getElementById('manageProfilesSide');
+    const searchSide = document.getElementById('searchSide');
+    const toggleFiltersSide = document.getElementById('toggleFiltersSide');
+    const exportSide = document.getElementById('exportSide');
+
+    function openSide() {
+      sideMenu.classList.add('open');
+      sideOverlay.classList.add('show');
+      hamburger.classList.add('open');
+      sideMenu.setAttribute('aria-hidden', 'false');
+      sideOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSide() {
+      sideMenu.classList.remove('open');
+      sideOverlay.classList.remove('show');
+      hamburger.classList.remove('open');
+      sideMenu.setAttribute('aria-hidden', 'true');
+      sideOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    hamburger.addEventListener('click', (e) => { e.stopPropagation(); openSide(); });
+    sideClose.addEventListener('click', closeSide);
+    sideOverlay.addEventListener('click', closeSide);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSide(); });
+
+    // Side actions
+    newProfileSide.addEventListener('click', () => {
+      closeSide();
+      // navigate to the detailed create profile page
+      window.location.href = 'create_profile.html';
+    });
+
+    manageProfilesSide.addEventListener('click', async () => {
+      closeSide();
+      const toDelete = prompt('Enter full name of profile to remove (case-insensitive):');
+      if (!toDelete) return;
+      const idx = alumniData.findIndex(a => a.name && a.name.toLowerCase() === toDelete.toLowerCase());
+      if (idx === -1) return alert('Profile not found.');
+      if (!confirm('Delete profile "' + alumniData[idx].name + '"?')) return;
+      const id = alumniData[idx].id;
+      try {
+        await fetch(API_BASE + '/api/alumni/' + encodeURIComponent(id), { method: 'DELETE' });
+        alumniData.splice(idx, 1);
+        applyFilters();
+        alert('Profile removed.');
+      } catch (err) { console.error(err); alert('Failed to remove profile.'); }
+    });
+
+    searchSide.addEventListener('click', () => {
+      closeSide();
+      const s = document.getElementById('search');
+      if (s) { s.focus(); s.scrollIntoView({behavior:'smooth', block:'center'}); }
+    });
+
+    toggleFiltersSide.addEventListener('click', () => {
+      closeSide();
+      const controls = document.querySelector('.controls');
+      if (!controls) return;
+      controls.style.display = controls.style.display === 'none' ? '' : 'none';
+    });
+
+    exportSide.addEventListener('click', () => {
+      closeSide();
+      // download from server
+      const url = API_BASE + '/api/export';
+      const a = document.createElement('a'); a.href = url; a.download = 'alumni-export.json'; document.body.appendChild(a); a.click(); a.remove();
+    });
+
+    // --- Profile modal wiring ---
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalImage = document.getElementById('modalImage');
+    const modalName = document.getElementById('modalName');
+    const modalBranch = document.getElementById('modalBranch');
+    const modalBatch = document.getElementById('modalBatch');
+    const modalCompany = document.getElementById('modalCompany');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalDelete = document.getElementById('modalDelete');
+    const modalClose = document.getElementById('modalClose');
+
+    let activeProfile = null;
+
+    function openProfileModal(profile) {
+      activeProfile = profile;
+      modalImage.src = profile.image || 'https://picsum.photos/seed/' + encodeURIComponent(profile.name) + '/800/600';
+      modalName.textContent = profile.name || '';
+      modalBranch.textContent = (profile.branch || '').toUpperCase();
+      modalBatch.textContent = profile.batch ? (profile.batch + ' Batch') : '';
+      modalCompany.textContent = profile.company || '';
+      modalDesc.textContent = profile.desc || '';
+      modalOverlay.classList.add('show');
+      modalOverlay.setAttribute('aria-hidden','false');
+    }
+
+    function closeProfileModal() {
+      modalOverlay.classList.remove('show');
+      modalOverlay.setAttribute('aria-hidden','true');
+      activeProfile = null;
+    }
+
+    modalClose.addEventListener('click', closeProfileModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeProfileModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProfileModal(); });
+
+    modalDelete.addEventListener('click', async () => {
+      if (!activeProfile) return alert('Cannot delete: no active profile');
+      if (!activeProfile.id || String(activeProfile.id).trim() === '') return alert('Cannot delete: unknown id');
+      if (!API_BASE) return alert('Cannot delete: API not configured');
+
+      // verify API health before attempting delete
+      try {
+        const ok = await checkApi();
+        if (!ok) {
+          alert('API unreachable at ' + API_BASE + '. Please start the server and try again.');
+          return;
+        }
+      } catch (_) { /* ignore */ }
+
+      if (!confirm('Delete profile "' + (activeProfile.name || 'profile') + '"?')) return;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const url = API_BASE + '/api/alumni/' + encodeURIComponent(activeProfile.id);
+        const res = await fetch(url, { method: 'DELETE', signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          const msg = 'Delete failed (' + res.status + ') at ' + url + (text ? ('\n' + text) : '');
+          alert(msg);
+          return;
+        }
+        // remove locally
+        const idx = alumniData.findIndex(a => String(a.id) === String(activeProfile.id));
+        if (idx !== -1) alumniData.splice(idx, 1);
+        applyFilters();
+        closeProfileModal();
+        alert('Profile deleted');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete at ' + API_BASE + ': ' + (err.name || err.message || 'Network error'));
+      }
+    });
+
+    // delegate clicks from cards to open full profile page
+    cardsRoot.addEventListener('click', (e) => {
+      const card = e.target.closest('.card');
+      if (!card) return;
+      const idx = parseInt(card.getAttribute('data-index'), 10);
+      if (Number.isFinite(idx)) {
+        const profile = alumniData[idx];
+        if (profile) window.location.href = 'profile.html?id=' + encodeURIComponent(profile.id);
+      }
+    });
+
+    // --- Header account dropdown ---
+    (function(){
+      const acctBtn = document.getElementById('headerAccountBtn');
+      const acctDropdown = document.getElementById('accountDropdown');
+      const acctName = document.getElementById('accountName');
+      const acctMy = document.getElementById('accountMyBtn');
+      const acctLogout = document.getElementById('headerLogout');
+      const LS_KEY = 'alumni_login_id';
+
+  function getRemembered(){ return localStorage.getItem(LS_KEY); }
+  function setRemembered(id){ if (id) localStorage.setItem(LS_KEY, id); else localStorage.removeItem(LS_KEY); }
+
+  // hide logout if no remembered user; show "My Profile" when logged in
+  try { const existing = getRemembered(); if (headerLogout) headerLogout.style.display = existing ? '' : 'none'; const myBtn = document.getElementById('myProfileBtn'); if (myBtn) { myBtn.style.display = existing ? '' : 'none'; myBtn.addEventListener('click', ()=>{ if (existing) window.location.href = 'profile.html?id='+encodeURIComponent(existing); else window.location.href='loginfinal.html'; }); } } catch(e) {}
+
+      acctBtn && acctBtn.addEventListener('click', (e)=>{ e.stopPropagation(); const open = acctDropdown.style.display !== 'none'; acctDropdown.style.display = open ? 'none' : ''; acctBtn.setAttribute('aria-expanded', (!open).toString()); });
+      document.addEventListener('click', ()=>{ if (acctDropdown) acctDropdown.style.display = 'none'; if (acctBtn) acctBtn.setAttribute('aria-expanded','false'); });
+      acctLogout && acctLogout.addEventListener('click', ()=>{
+        // Clear remembered login and any user metadata, reset header UI
+        try {
+          // remove any keys that start with 'alumni_' from localStorage and sessionStorage
+          const prefix = 'alumni_';
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.indexOf(prefix) === 0) localStorage.removeItem(k);
+          }
+          for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const k = sessionStorage.key(i);
+            if (k && k.indexOf(prefix) === 0) sessionStorage.removeItem(k);
+          }
+          // also ensure the specific LS_KEY is removed
+          setRemembered(null);
+          localStorage.removeItem(LS_KEY);
+        } catch(e) {}
+        try {
+          // reset account button label to generic state
+          const lbl = acctBtn && acctBtn.querySelector('.label');
+          if (lbl) lbl.textContent = 'Account';
+          // hide my profile and logout
+          const my = document.getElementById('myProfileBtn'); if (my) my.style.display = 'none';
+          if (acctDropdown) acctDropdown.style.display = 'none';
+          if (acctBtn) acctBtn.setAttribute('aria-expanded','false');
+          if (headerLogout) headerLogout.style.display = 'none';
+        } catch (e) { /* ignore UI reset errors */ }
+        // compute redirect target from ?afterLogout= (only allow relative or same-origin paths)
+        try {
+          const params = new URLSearchParams(window.location.search);
+          let target = (params.get('afterLogout') || '').trim() || 'mainad.html';
+          // reject absolute external URLs (only allow paths or same-origin)
+          if (/^https?:\/\//i.test(target)) {
+            const parsed = new URL(target, window.location.origin);
+            if (parsed.origin !== window.location.origin) target = 'mainad.html';
+          }
+          window.location.href = target;
+        } catch (e) {
+          window.location.href = 'mainad.html';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
